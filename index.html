@@ -381,12 +381,12 @@ body { background: #f5f2eb; display: flex; justify-content: center; padding: 20p
   }
 
   function draw(ts){
-    // Clear BEFORE any translate — otherwise the shifted clearRect leaves strips that accumulate into smearing
+    cx.setTransform(1,0,0,1,0,0);
     cx.clearRect(0,0,W,H);
     var ox=0,oy=0;
-    if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8)*0.5;ox=(Math.random()-0.5)*sa*2;oy=(Math.random()-0.5)*sa*2;}
-    cx.save();cx.translate(ox,oy);
-    cx.save();cx.beginPath();cx.arc(MX,MY,AR,0,Math.PI*2);cx.clip();
+    if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8)*0.4;ox=(Math.random()-0.5)*sa*2;oy=(Math.random()-0.5)*sa*2;}
+    cx.setTransform(1,0,0,1,ox,oy);
+    cx.save();cx.beginPath();cx.arc(MX,MY,AR,0,Math.PI*2);cx.clip(); // save#1 for arena clip
     cx.fillStyle='#0d1520';cx.fillRect(-20,-20,W+40,H+40);
     for(var r=AR*0.25;r<AR;r+=AR*0.25){cx.beginPath();cx.arc(MX,MY,r,0,Math.PI*2);cx.strokeStyle='rgba(30,58,95,0.22)';cx.lineWidth=0.5;cx.stroke();}
     for(var a=0;a<Math.PI*2;a+=Math.PI/6){cx.beginPath();cx.moveTo(MX,MY);cx.lineTo(MX+Math.cos(a)*AR,MY+Math.sin(a)*AR);cx.strokeStyle='rgba(30,58,95,0.22)';cx.lineWidth=0.5;cx.stroke();}
@@ -408,14 +408,14 @@ body { background: #f5f2eb; display: flex; justify-content: center; padding: 20p
     try{drawTrump(E.x,E.y,E.sz,tE);}catch(e){}
     taunts.forEach(function(t){var alpha=Math.min(1,t.life/20),yOff=-E.sz*1.5-34-(1-t.life/130)*10;cx.globalAlpha=alpha;cx.font='bold 10px monospace';cx.textAlign='center';var tw=cx.measureText(t.txt).width+18;cx.fillStyle='#fffde7';cx.beginPath();cx.arc(E.x-tw/2+9,E.y+yOff-8,9,Math.PI*0.5,Math.PI*1.5);cx.arc(E.x+tw/2-9,E.y+yOff-8,9,Math.PI*1.5,Math.PI*0.5);cx.closePath();cx.fill();cx.strokeStyle='#f9a825';cx.lineWidth=1;cx.stroke();cx.fillStyle='#333';cx.fillText(t.txt,E.x,E.y+yOff);cx.globalAlpha=1;});
     if(drag){cx.strokeStyle='rgba(79,195,247,0.4)';cx.lineWidth=1;cx.setLineDash([4,4]);cx.beginPath();cx.arc(P.x,P.y,P.sz*1.4+16,0,Math.PI*2);cx.stroke();cx.setLineDash([]);}
-    cx.restore();
+    cx.restore(); // restore#1 arena clip
     cx.beginPath();cx.arc(MX,MY,AR,0,Math.PI*2);cx.strokeStyle='#1e3a5f';cx.lineWidth=2.5;cx.stroke();
     if(!focused){cx.fillStyle='rgba(10,15,26,0.65)';cx.fillRect(0,H-28,W,28);cx.fillStyle='rgba(79,195,247,0.7)';cx.font='11px monospace';cx.textAlign='center';cx.fillText('click here to enable keyboard controls',MX,H-9);}
     if(over){cx.fillStyle='rgba(10,15,26,0.9)';cx.fillRect(MX-145,MY-50,290,100);cx.fillStyle=win==='crowd'?'#4fc3f7':'#ef5350';cx.font='bold 22px monospace';cx.textAlign='center';cx.fillText(win==='crowd'?'CROWD WINS!':'OPPONENT WINS!',MX,MY-16);cx.fillStyle='rgba(255,255,255,0.5)';cx.font='12px monospace';cx.fillText('score  '+pScore+' — '+eScore,MX,MY+6);cx.fillStyle='rgba(255,255,255,0.25)';cx.font='11px monospace';cx.fillText('next round starting…',MX,MY+28);}
-    cx.restore();
+    cx.setTransform(1,0,0,1,0,0);
   }
 
-  function loop(ts){try{update(ts);}catch(e){}try{draw(ts);}catch(e){}requestAnimationFrame(loop);}
+  function loop(ts){update(ts);draw(ts);requestAnimationFrame(loop);}
   requestAnimationFrame(loop);
 })();
 </script>
