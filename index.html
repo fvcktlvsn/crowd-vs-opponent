@@ -381,9 +381,11 @@ body { background: #f5f2eb; display: flex; justify-content: center; padding: 20p
   }
 
   function draw(ts){
+    // Clear BEFORE any translate — otherwise the shifted clearRect leaves strips that accumulate into smearing
+    cx.clearRect(0,0,W,H);
     var ox=0,oy=0;
-    if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8);ox=(Math.random()-0.5)*sa*2;oy=(Math.random()-0.5)*sa*2;}
-    cx.save();cx.translate(ox,oy);cx.clearRect(-20,-20,W+40,H+40);
+    if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8)*0.5;ox=(Math.random()-0.5)*sa*2;oy=(Math.random()-0.5)*sa*2;}
+    cx.save();cx.translate(ox,oy);
     cx.save();cx.beginPath();cx.arc(MX,MY,AR,0,Math.PI*2);cx.clip();
     cx.fillStyle='#0d1520';cx.fillRect(-20,-20,W+40,H+40);
     for(var r=AR*0.25;r<AR;r+=AR*0.25){cx.beginPath();cx.arc(MX,MY,r,0,Math.PI*2);cx.strokeStyle='rgba(30,58,95,0.22)';cx.lineWidth=0.5;cx.stroke();}
