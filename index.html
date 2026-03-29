@@ -115,7 +115,8 @@ cv.addEventListener('touchend',function(){drag=false;});
 function holdBtn(id,fn){var b=document.getElementById(id);if(!b)return;var iv=null;b.addEventListener('mousedown',function(e){e.preventDefault();unlockAudio();fn();iv=setInterval(fn,65);});b.addEventListener('touchstart',function(e){e.preventDefault();unlockAudio();fn();iv=setInterval(fn,65);},{passive:false});['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){b.addEventListener(ev,function(){clearInterval(iv);});});}
 holdBtn('bu',function(){mv(0,-1);});holdBtn('bd',function(){mv(0,1);});holdBtn('bl',function(){mv(-1,0);});holdBtn('br',function(){mv(1,0);});
 document.getElementById('bfire').addEventListener('mousedown',function(){unlockAudio();spaceQ=true;spaceHeld=true;});
-['mouseup','mouseleave','touchend'].forEach(function(ev){document.getElementById('bfire').addEventListener(ev,function(){spaceHeld=false;});});
+document.getElementById('bfire').addEventListener('touchstart',function(e){e.preventDefault();unlockAudio();spaceQ=true;spaceHeld=true;},{passive:false});
+['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){document.getElementById('bfire').addEventListener(ev,function(){spaceHeld=false;});});
 
 // physics — rectangular arena
 function wc(e){
