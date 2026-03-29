@@ -163,8 +163,8 @@ function drawCanadian(x,y,sz,expr){
   cx.save();
   cx.beginPath();cx.arc(0,0,r*.98,0,Math.PI*2);cx.clip();
   if(PIMG&&PIMG.complete&&PIMG.naturalWidth>0){
-    var dim=r*2;
-    cx.drawImage(PIMG,0,0,PIMG.naturalWidth,PIMG.naturalHeight,-dim/2,-dim/2,dim,dim);
+    var dim=r*2.05;
+    cx.drawImage(PIMG,0,0,PIMG.naturalWidth,PIMG.naturalHeight,-dim/2,-dim*0.46,dim,dim);
   } else {
     // fallback — orange pilot circle
     cx.fillStyle='#e89030';cx.beginPath();cx.arc(0,0,r*.7,0,Math.PI*2);cx.fill();
