@@ -36,7 +36,7 @@ body{display:flex;justify-content:center;padding:8px 6px;min-height:100vh;min-he
     <button id="bfire">&bull; fire</button>
     <button id="br">&rarr;</button><button id="bd">&darr;</button>
   </div>
-  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v2.7.0</div>
+  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v2.8.0</div>
 </div>
 <script src="assets.js"></script>
 <script>
@@ -323,6 +323,7 @@ sizeCanvas();
 init();
 window.addEventListener('resize',function(){
   sizeCanvas();
+  renderSpaceBg(); // re-render atmospheric bg for new size
   if(P){P.x=Math.min(P.x,W-PAD-P.sz*2);P.y=Math.min(P.y,H-PAD-P.sz*2);}
   if(E){E.x=Math.min(E.x,W-PAD-E.sz*2);E.y=Math.min(E.y,H-PAD-E.sz*2);}
 });
@@ -536,26 +537,118 @@ function drawStars(ts){
   if(meteorsDead>0||Math.random()<0.008){spawnMeteor();}
 }
 
+// Pre-rendered atmospheric background canvas
+var bgCanvas=document.createElement('canvas');var bgCtx;
+function renderSpaceBg(){
+  bgCanvas.width=W;bgCanvas.height=H;bgCtx=bgCanvas.getContext('2d');
+  var bx=bgCtx;
+  // Deep space base — dark navy to black gradient
+  var base=bx.createLinearGradient(0,0,0,H);
+  base.addColorStop(0,'#050a18');
+  base.addColorStop(0.3,'#0a1028');
+  base.addColorStop(0.6,'#080e22');
+  base.addColorStop(1,'#030812');
+  bx.fillStyle=base;bx.fillRect(0,0,W,H);
+
+  // Large nebula clouds — soft radial blobs
+  var nebulae=[
+    {x:W*0.2,y:H*0.3,r:W*0.4,c1:'rgba(20,40,120,.15)',c2:'rgba(10,20,80,.05)'},
+    {x:W*0.75,y:H*0.55,r:W*0.35,c1:'rgba(40,15,90,.12)',c2:'rgba(20,10,60,.03)'},
+    {x:W*0.5,y:H*0.15,r:W*0.3,c1:'rgba(15,50,100,.10)',c2:'rgba(8,25,60,.02)'},
+    {x:W*0.85,y:H*0.2,r:W*0.25,c1:'rgba(30,20,80,.10)',c2:'rgba(15,10,50,.02)'},
+    {x:W*0.1,y:H*0.75,r:W*0.3,c1:'rgba(10,30,70,.08)',c2:'rgba(5,15,40,.02)'},
+    // Brighter blue accent cloud
+    {x:W*0.35,y:H*0.45,r:W*0.22,c1:'rgba(30,80,180,.08)',c2:'rgba(15,40,100,.01)'},
+  ];
+  nebulae.forEach(function(n){
+    var ng=bx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r);
+    ng.addColorStop(0,n.c1);ng.addColorStop(0.5,n.c2);ng.addColorStop(1,'rgba(0,0,0,0)');
+    bx.fillStyle=ng;bx.fillRect(0,0,W,H);
+  });
+
+  // Wispy nebula streaks (elongated ellipses)
+  bx.save();
+  for(var wi=0;wi<8;wi++){
+    var wx=Math.random()*W,wy=Math.random()*H;
+    var wa=Math.random()*Math.PI;
+    bx.save();bx.translate(wx,wy);bx.rotate(wa);
+    var wg=bx.createRadialGradient(0,0,0,0,0,W*0.2);
+    var hue=Math.random()>.5?'40,80,160':'60,20,100';
+    wg.addColorStop(0,'rgba('+hue+',.06)');
+    wg.addColorStop(1,'rgba(0,0,0,0)');
+    bx.fillStyle=wg;bx.scale(1,0.25);
+    bx.fillRect(-W*0.2,-W*0.2,W*0.4,W*0.4);
+    bx.restore();
+  }
+  bx.restore();
+
+  // Background moon — large, softly lit
+  var moonX=W*0.78,moonY=H*0.22,moonR=Math.min(W,H)*0.12;
+  // Moon glow
+  var glow=bx.createRadialGradient(moonX,moonY,moonR*0.8,moonX,moonY,moonR*2.5);
+  glow.addColorStop(0,'rgba(100,130,180,.06)');
+  glow.addColorStop(0.5,'rgba(60,80,140,.03)');
+  glow.addColorStop(1,'rgba(0,0,0,0)');
+  bx.fillStyle=glow;bx.fillRect(0,0,W,H);
+  // Moon body
+  var mg=bx.createRadialGradient(moonX-moonR*0.3,moonY-moonR*0.3,0,moonX,moonY,moonR);
+  mg.addColorStop(0,'rgba(200,210,230,.18)');
+  mg.addColorStop(0.7,'rgba(140,150,180,.12)');
+  mg.addColorStop(1,'rgba(80,90,120,.06)');
+  bx.fillStyle=mg;bx.beginPath();bx.arc(moonX,moonY,moonR,0,Math.PI*2);bx.fill();
+  // Craters
+  bx.globalAlpha=0.04;bx.fillStyle='#000';
+  bx.beginPath();bx.arc(moonX+moonR*.2,moonY-moonR*.15,moonR*.2,0,Math.PI*2);bx.fill();
+  bx.beginPath();bx.arc(moonX-moonR*.3,moonY+moonR*.3,moonR*.15,0,Math.PI*2);bx.fill();
+  bx.beginPath();bx.arc(moonX+moonR*.1,moonY+moonR*.35,moonR*.12,0,Math.PI*2);bx.fill();
+  bx.globalAlpha=1;
+
+  // Distant planet — smaller, in the other corner
+  var dpX=W*0.15,dpY=H*0.7,dpR=Math.min(W,H)*0.05;
+  var dpg=bx.createRadialGradient(dpX-dpR*.3,dpY-dpR*.3,0,dpX,dpY,dpR);
+  dpg.addColorStop(0,'rgba(120,80,60,.12)');
+  dpg.addColorStop(1,'rgba(60,40,30,.06)');
+  bx.fillStyle=dpg;bx.beginPath();bx.arc(dpX,dpY,dpR,0,Math.PI*2);bx.fill();
+  // Ring
+  bx.strokeStyle='rgba(160,140,110,.06)';bx.lineWidth=dpR*0.12;
+  bx.beginPath();bx.ellipse(dpX,dpY,dpR*1.8,dpR*0.3,0.3,0,Math.PI*2);bx.stroke();
+
+  // Tiny background star specks (static, part of bg)
+  for(var si=0;si<200;si++){
+    var sx=Math.random()*W,sy=Math.random()*H;
+    var sb=0.1+Math.random()*0.4;
+    var ss=0.3+Math.random()*1.0;
+    bx.fillStyle='rgba(180,200,255,'+sb.toFixed(2)+')';
+    bx.beginPath();bx.arc(sx,sy,ss,0,Math.PI*2);bx.fill();
+  }
+
+  // Edge vignette baked in
+  var vig=bx.createRadialGradient(MX,MY,Math.min(W,H)*.25,MX,MY,Math.max(W,H)*.72);
+  vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,.45)');
+  bx.fillStyle=vig;bx.fillRect(0,0,W,H);
+}
+
 function draw(ts){
   cx.setTransform(1,0,0,1,0,0);cx.globalAlpha=1;
 
-  // space background
-  cx.fillStyle='#020408';cx.fillRect(0,0,W,H);
-  var ng=cx.createRadialGradient(W*.3,H*.4,0,W*.3,H*.4,W*.5);ng.addColorStop(0,'rgba(30,10,60,.12)');ng.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=ng;cx.fillRect(0,0,W,H);
-  var ng2=cx.createRadialGradient(W*.75,H*.6,0,W*.75,H*.6,W*.4);ng2.addColorStop(0,'rgba(10,30,60,.1)');ng2.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=ng2;cx.fillRect(0,0,W,H);
+  // Pre-rendered atmospheric space background
+  if(!bgCtx||bgCanvas.width!==W)renderSpaceBg();
+  cx.drawImage(bgCanvas,0,0);
+
+  // Parallax offset for moving layers based on player position
+  var pdx=(P?P.x-MX:0)/MX, pdy=(P?P.y-MY:0)/MY;
 
   drawStars(ts);
   cx.save();
-  cx.filter='blur(5px)';cx.globalAlpha=.55;cx.drawImage(scvFar,0,0);
-  cx.filter='blur(1.5px)';cx.globalAlpha=.75;cx.drawImage(scvMid,0,0);
-  cx.filter='none';cx.globalAlpha=0.95;cx.drawImage(scvNear,0,0);
+  // Far layer — heavy blur for depth-of-field
+  cx.filter='blur(4px)';cx.globalAlpha=.5;cx.drawImage(scvFar,-pdx*6,-pdy*4);
+  // Mid layer — gentle blur
+  cx.filter='blur(1.2px)';cx.globalAlpha=.7;cx.drawImage(scvMid,-pdx*12,-pdy*8);
+  // Near layer — sharp, strong parallax
+  cx.filter='none';cx.globalAlpha=0.9;cx.drawImage(scvNear,-pdx*20,-pdy*14);
   cx.globalAlpha=1;cx.restore();
 
   var ox=0,oy=0;if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8)*.4;ox=(Math.random()-.5)*sa*2;oy=(Math.random()-.5)*sa*2;}cx.translate(ox,oy);
-
-  var vg=cx.createRadialGradient(MX,MY,Math.min(W,H)*.3,MX,MY,Math.max(W,H)*.7);
-  vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.35)');
-  cx.fillStyle=vg;cx.fillRect(0,0,W,H);
 
   // powerups
   pups.forEach(function(pu){var pulse=.88+Math.sin(ts*.005)*.12;cx.beginPath();cx.arc(pu.x,pu.y,10*pulse,0,Math.PI*2);cx.fillStyle=pu.t.col+'33';cx.fill();cx.strokeStyle=pu.t.col;cx.lineWidth=1.5;cx.stroke();cx.fillStyle=pu.t.col;cx.font='11px monospace';cx.textAlign='center';cx.fillText(pu.t.glyph,pu.x,pu.y+4);});
@@ -611,9 +704,10 @@ function draw(ts){
     cx.textBaseline='alphabetic';
   }
 
-  // === GAME OVER OVERLAY — solid black bg (delayed during explosion) ===
+  // === GAME OVER OVERLAY (delayed during explosion) ===
   if(over&&(!deathStarExplosion.active||win!=='crowd')){
-    cx.fillStyle='#020408';cx.fillRect(0,0,W,H);
+    cx.drawImage(bgCanvas,0,0);
+    cx.fillStyle='rgba(2,4,8,.7)';cx.fillRect(0,0,W,H);
     // subtle radial glow
     var winCol=win==='crowd'?'rgba(79,195,247,.08)':'rgba(239,83,80,.08)';
     var rg=cx.createRadialGradient(MX,MY,0,MX,MY,Math.min(W,H)*.5);
@@ -633,12 +727,15 @@ function draw(ts){
   if(paused&&!over&&bossAnnounce<=0){cx.fillStyle='rgba(4,8,16,.6)';cx.fillRect(0,0,W,H);cx.fillStyle='#4fc3f7';cx.font='bold 24px monospace';cx.textAlign='center';cx.fillText('PAUSED',MX,MY-8);cx.fillStyle='rgba(255,255,255,.35)';cx.font='11px monospace';cx.fillText(isMobile?'tap pause to resume':'press P or ESC to resume',MX,MY+14);}
   cx.setTransform(1,0,0,1,0,0);
 
-  // === START SCREEN — solid black bg ===
+  // === START SCREEN — atmospheric bg ===
   if(!gameStarted){
-    cx.fillStyle='#020408';cx.fillRect(0,0,W,H);
+    if(!bgCtx||bgCanvas.width!==W)renderSpaceBg();
+    cx.drawImage(bgCanvas,0,0);
+    // Dim overlay for readability
+    cx.fillStyle='rgba(2,4,8,.55)';cx.fillRect(0,0,W,H);
     // subtle star twinkle on start screen
     drawStars(ts);
-    cx.save();cx.filter='blur(3px)';cx.globalAlpha=.3;cx.drawImage(scvFar,0,0);cx.filter='none';cx.globalAlpha=.5;cx.drawImage(scvNear,0,0);cx.globalAlpha=1;cx.restore();
+    cx.save();cx.filter='blur(3px)';cx.globalAlpha=.25;cx.drawImage(scvFar,0,0);cx.filter='none';cx.globalAlpha=.4;cx.drawImage(scvNear,0,0);cx.globalAlpha=1;cx.restore();
     cx.textAlign='center';cx.textBaseline='middle';
     var tFs=Math.min(30,W*.04);
     cx.fillStyle='#4fc3f7';cx.font='bold '+tFs+'px monospace';
