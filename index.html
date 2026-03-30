@@ -36,7 +36,7 @@ body{display:flex;justify-content:center;padding:8px 6px;min-height:100vh;min-he
     <button id="bfire">&bull; fire</button>
     <button id="br">&rarr;</button><button id="bd">&darr;</button>
   </div>
-  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v3.0.2</div>
+  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v3.0.3</div>
 </div>
 <script src="assets.js"></script>
 <script>
@@ -159,47 +159,74 @@ function oval(ox,oy,rx,ry){var k=.552;cx.beginPath();cx.moveTo(ox,oy-ry);cx.bezi
 var actx=null;
 var sndBufs={};
 var audioUnlocked=false;
+var audioLoaded=false;
+
+// Convert base64 data URI to ArrayBuffer without fetch (iOS Safari compat)
+function b64ToArrayBuffer(dataURI){
+  var b64=dataURI.split(',')[1];
+  if(!b64)return null;
+  var bin=atob(b64);
+  var len=bin.length;
+  var bytes=new Uint8Array(len);
+  for(var i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function loadAllSounds(){
+  if(audioLoaded||!actx)return;
+  audioLoaded=true;
+  Object.keys(SND_SRCS).forEach(function(name){
+    if(SND_SRCS[name]==='PUT_BASE64_HERE')return;
+    try{
+      var ab=b64ToArrayBuffer(SND_SRCS[name]);
+      if(!ab)return;
+      actx.decodeAudioData(ab,function(buf){sndBufs[name]=buf;},function(e){console.warn('decode fail',name,e);});
+    }catch(e){console.warn('snd load fail',name,e);}
+  });
+}
+
 function initAudio(){
   if(actx)return;
   try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
-  Object.keys(SND_SRCS).forEach(function(name){
-    if(SND_SRCS[name]==='PUT_BASE64_HERE')return;
-    fetch(SND_SRCS[name])
-      .then(function(r){return r.arrayBuffer();})
-      .then(function(ab){return actx.decodeAudioData(ab);})
-      .then(function(buf){sndBufs[name]=buf;})
-      .catch(function(e){console.warn('snd fail',name,e);});
-  });
+  loadAllSounds();
 }
+
 function unlockAudio(){
-  // iOS Safari requires playing a buffer inside a user gesture to unlock audio
-  if(audioUnlocked)return;
-  if(!actx)initAudio();
-  if(!actx)return;
-  if(actx.state==='suspended'){actx.resume();}
-  // Play a tiny silent buffer to fully unlock on iOS
-  try{
-    var silentBuf=actx.createBuffer(1,1,22050);
-    var src=actx.createBufferSource();
-    src.buffer=silentBuf;
-    src.connect(actx.destination);
-    src.start(0);
-    audioUnlocked=true;
-  }catch(e){}
+  if(!actx){
+    // Create AudioContext inside user gesture for iOS
+    try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+    loadAllSounds();
+  }
+  // Resume if suspended
+  if(actx.state==='suspended'){
+    actx.resume().catch(function(){});
+  }
+  // Play silent buffer to unlock iOS audio — must happen inside touch/click handler
+  if(!audioUnlocked){
+    try{
+      var silentBuf=actx.createBuffer(1,1,actx.sampleRate||44100);
+      var src=actx.createBufferSource();
+      src.buffer=silentBuf;
+      src.connect(actx.destination);
+      src.start(0);
+      src.onended=function(){audioUnlocked=true;};
+      // Also set immediately in case onended doesn't fire
+      audioUnlocked=true;
+    }catch(e){}
+  }
 }
-function resumeAudio(){
-  if(!actx)initAudio();
-  unlockAudio();
-}
-// Unlock on ANY user gesture — touchstart, mousedown, keydown
-function onFirstGesture(){resumeAudio();}
+
+function resumeAudio(){unlockAudio();}
+
+// Unlock on ANY user gesture — not {once:true} because iOS may need multiple attempts
+function onFirstGesture(){unlockAudio();}
 document.addEventListener('touchstart',onFirstGesture,{passive:true});
 document.addEventListener('touchend',onFirstGesture,{passive:true});
-document.addEventListener('mousedown',onFirstGesture,{once:true});
-document.addEventListener('keydown',onFirstGesture,{once:true});
+document.addEventListener('mousedown',onFirstGesture);
+document.addEventListener('keydown',onFirstGesture);
 function playBuf(name,vol,rate){
   try{if(!actx||!sndBufs[name])return;
-  if(actx.state==='suspended')actx.resume();
+  if(actx.state==='suspended')actx.resume().catch(function(){});
   var src=actx.createBufferSource();src.buffer=sndBufs[name];
   if(rate)src.playbackRate.value=rate;
   var g=actx.createGain();g.gain.value=vol||1;
