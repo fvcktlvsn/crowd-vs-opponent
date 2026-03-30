@@ -36,7 +36,7 @@ body{display:flex;justify-content:center;padding:8px 6px;min-height:100vh;min-he
     <button id="bfire">&bull; fire</button>
     <button id="br">&rarr;</button><button id="bd">&darr;</button>
   </div>
-  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v2.8.0</div>
+  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v2.9.0</div>
 </div>
 <script src="assets.js"></script>
 <script>
@@ -81,23 +81,12 @@ function mkLayer(){var c=document.createElement('canvas');c.width=W||800;c.heigh
 var scvFar=mkLayer(),scvMid=mkLayer(),scvNear=mkLayer();
 var sxFar=scvFar.getContext('2d'),sxMid=scvMid.getContext('2d'),sxNear=scvNear.getContext('2d');
 
-// starfield
+// Subtle background stars — all soft, no competing elements
 var stars=[];
+// All stars are far/mid only — nothing sharp in the near layer
 var STAR_CFG=[
-  [0, 80,  [0.3,0.7],  [0.4,1.2],  [2,5],    [0.08,0.2]],
-  [1, 55,  [0.6,1.2],  [1.5,3.5],  [6,14],   [0.2, 0.5]],
-  [2, 30,  [1.0,2.2],  [4.0,9.0],  [16,34],  [0.5, 1.0]]
-];
-
-// Parallax space objects — planets, asteroids, meteors
-var spaceObjects=[];
-var PLANET_COLORS=[
-  {body:'#8B4513',ring:null,detail:'#A0522D'},       // brown rocky
-  {body:'#4a6a8a',ring:null,detail:'#5a7a9a'},       // blue-grey
-  {body:'#c8956c',ring:'rgba(200,180,140,.3)',detail:'#daa888'}, // saturn-like
-  {body:'#6a4a6a',ring:null,detail:'#8a6a8a'},       // purple
-  {body:'#3a5a3a',ring:null,detail:'#4a6a4a'},       // dark green
-  {body:'#aa6633',ring:'rgba(180,160,120,.25)',detail:'#cc8855'}, // ringed gas giant
+  [0, 100, [0.3,0.8],  [0.2,0.6],  [0,1],    [0.06,0.15]],  // far: tiny dim dots, barely moving
+  [1, 50,  [0.4,1.0],  [0.5,1.2],  [0,2],    [0.10,0.25]],  // mid: slightly brighter, gentle drift
 ];
 
 function regenerateStars(){
@@ -106,28 +95,9 @@ function regenerateStars(){
     var layer=cfg[0],cnt=cfg[1],szR=cfg[2],spR=cfg[3],stR=cfg[4],brR=cfg[5];
     for(var si=0;si<cnt;si++){
       var t=Math.random();
-      stars.push({layer:layer,x:Math.random()*W,y:Math.random()*H,sz:szR[0]+t*(szR[1]-szR[0]),sp:spR[0]+t*(spR[1]-spR[0]),streak:stR[0]+t*(stR[1]-stR[0]),br:brR[0]+t*(brR[1]-brR[0]),tw:Math.random()*Math.PI*2,ang:Math.PI/2});
+      stars.push({layer:layer,x:Math.random()*W,y:Math.random()*H,sz:szR[0]+t*(szR[1]-szR[0]),sp:spR[0]+t*(spR[1]-spR[0]),streak:stR[0]+t*(stR[1]-stR[0]),br:brR[0]+t*(brR[1]-brR[0]),tw:Math.random()*Math.PI*2,ang:Math.PI/2+Math.random()*0.3-0.15});
     }
   });
-  // Generate space objects
-  spaceObjects=[];
-  // Far planets (slow, large, blurry)
-  for(var pi=0;pi<3;pi++){
-    var pc=PLANET_COLORS[Math.floor(Math.random()*PLANET_COLORS.length)];
-    spaceObjects.push({type:'planet',layer:0,x:Math.random()*W*1.5,y:Math.random()*H,sz:15+Math.random()*25,sp:0.15+Math.random()*0.25,col:pc,rot:Math.random()*Math.PI*2});
-  }
-  // Mid asteroids (medium speed, small, tumbling)
-  for(var ai=0;ai<5;ai++){
-    spaceObjects.push({type:'asteroid',layer:1,x:Math.random()*W*1.5,y:Math.random()*H,sz:3+Math.random()*6,sp:0.8+Math.random()*1.5,rot:Math.random()*Math.PI*2,rotSpd:0.01+Math.random()*0.03,col:'#'+['7a6a5a','6a5a4a','8a7a6a','5a4a3a'][Math.floor(Math.random()*4)]});
-  }
-  // Near meteors (fast, bright trails)
-  for(var mi=0;mi<2;mi++){
-    spawnMeteor();
-  }
-}
-function spawnMeteor(){
-  var ang=Math.PI*0.35+Math.random()*Math.PI*0.3;
-  spaceObjects.push({type:'meteor',layer:2,x:-20+Math.random()*W*0.3,y:-20,sz:1.5+Math.random()*2.5,sp:5+Math.random()*6,ang:ang,life:80+Math.random()*60,maxLife:80+Math.random()*60,col:Math.random()>.5?'#ffcc88':'#aaccff',trail:[]});
 }
 
 function oval(ox,oy,rx,ry){var k=.552;cx.beginPath();cx.moveTo(ox,oy-ry);cx.bezierCurveTo(ox+rx*k,oy-ry,ox+rx,oy-ry*k,ox+rx,oy);cx.bezierCurveTo(ox+rx,oy+ry*k,ox+rx*k,oy+ry,ox,oy+ry);cx.bezierCurveTo(ox-rx*k,oy+ry,ox-rx,oy+ry*k,ox-rx,oy);cx.bezierCurveTo(ox-rx,oy-ry*k,ox-rx*k,oy-ry,ox,oy-ry);cx.closePath();}
@@ -411,130 +381,24 @@ function drawBolt(b){var isP=b.owner==='p';
   if(b.trail&&b.trail.length>1){var tc=isP?'rgba(255,80,80,':'rgba(80,255,100,';for(var _ti=1;_ti<b.trail.length;_ti++){var _tf=_ti/b.trail.length;cx.globalAlpha=_tf*0.5;cx.strokeStyle=tc+(_tf*0.6)+')';cx.lineWidth=3*_tf;cx.beginPath();cx.moveTo(b.trail[_ti-1].x,b.trail[_ti-1].y);cx.lineTo(b.trail[_ti].x,b.trail[_ti].y);cx.stroke();}cx.globalAlpha=1;}
   var coreCol=isP?'#ff4444':'#44ff66';var glowCol=isP?'rgba(255,50,50,':'rgba(50,255,80,';var nx=Math.cos(b.ang),ny=Math.sin(b.ang),len=18,w=2.5;cx.save();cx.lineCap='round';cx.strokeStyle=glowCol+'0.25)';cx.lineWidth=w*6;cx.beginPath();cx.moveTo(b.x-nx*len*.5,b.y-ny*len*.5);cx.lineTo(b.x+nx*len*.5,b.y+ny*len*.5);cx.stroke();cx.strokeStyle=glowCol+'0.5)';cx.lineWidth=w*3;cx.beginPath();cx.moveTo(b.x-nx*len*.4,b.y-ny*len*.4);cx.lineTo(b.x+nx*len*.5,b.y+ny*len*.5);cx.stroke();cx.strokeStyle=coreCol;cx.lineWidth=w*1.5;cx.beginPath();cx.moveTo(b.x-nx*len*.3,b.y-ny*len*.3);cx.lineTo(b.x+nx*len*.45,b.y+ny*len*.45);cx.stroke();cx.strokeStyle='rgba(255,255,255,0.9)';cx.lineWidth=w*.7;cx.beginPath();cx.moveTo(b.x-nx*len*.15,b.y-ny*len*.15);cx.lineTo(b.x+nx*len*.35,b.y+ny*len*.35);cx.stroke();cx.fillStyle='#fff';cx.beginPath();cx.arc(b.x+nx*len*.4,b.y+ny*len*.4,w*.8,0,Math.PI*2);cx.fill();cx.restore();}
 
-// stars + parallax space environment
+// Subtle twinkling star dots — all drawn to blurry layers
 function drawStars(ts){
-  var pdx=(P.x-MX)/MX, pdy=(P.y-MY)/MY;
-  var steerAng=Math.PI/2 + pdx*.4 - pdy*.25;
-  var layerCtx=[sxFar,sxMid,sxNear];
-  var layerRGB=[[160,185,255],[200,215,255],[235,240,255]];
-  sxFar.clearRect(0,0,W,H);sxMid.clearRect(0,0,W,H);sxNear.clearRect(0,0,W,H);
-
-  // Draw stars (same as before)
+  var layerCtx=[sxFar,sxMid];
+  var layerRGB=[[160,185,255],[200,215,255]];
+  sxFar.clearRect(0,0,W,H);sxMid.clearRect(0,0,W,H);
   for(var i=0;i<stars.length;i++){
-    var st=stars[i];var sc=layerCtx[st.layer],rgb=layerRGB[st.layer];
-    var steerStrength=[0.004, 0.012, 0.025][st.layer];
-    st.ang+=(steerAng-st.ang)*steerStrength;
+    var st=stars[i];
+    var sc=layerCtx[st.layer],rgb=layerRGB[st.layer];
+    // Gentle drift
     var ca=Math.cos(st.ang),sa2=Math.sin(st.ang);
-    st.x+=ca*st.sp; st.y+=sa2*st.sp; st.tw+=.015;
-    if(st.y>H+40)st.y=-40; if(st.y<-40)st.y=H+40;
-    if(st.x>W+40)st.x=-40; if(st.x<-40)st.x=W+40;
-    var twinkle=st.br*(.55+Math.sin(st.tw)*.45);
-    var tx=st.x-ca*st.streak, ty=st.y-sa2*st.streak;
-    var gr=sc.createLinearGradient(tx,ty,st.x,st.y);
-    gr.addColorStop(0,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
-    gr.addColorStop(.5,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(twinkle*.35).toFixed(3)+')');
-    gr.addColorStop(1,'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+twinkle.toFixed(3)+')');
-    sc.strokeStyle=gr; sc.lineWidth=st.sz; sc.lineCap='round';
-    sc.beginPath(); sc.moveTo(tx,ty); sc.lineTo(st.x,st.y); sc.stroke();
-    if(st.layer===2){sc.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(twinkle*.9).toFixed(3)+')';sc.beginPath(); sc.arc(st.x,st.y,st.sz*.7,0,Math.PI*2); sc.fill();}
+    st.x+=ca*st.sp; st.y+=sa2*st.sp; st.tw+=.012;
+    if(st.y>H+10)st.y=-10; if(st.y<-10)st.y=H+10;
+    if(st.x>W+10)st.x=-10; if(st.x<-10)st.x=W+10;
+    // Soft twinkle — just a dot, no streaks
+    var twinkle=st.br*(.5+Math.sin(st.tw)*.5);
+    sc.fillStyle='rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+twinkle.toFixed(3)+')';
+    sc.beginPath();sc.arc(st.x,st.y,st.sz,0,Math.PI*2);sc.fill();
   }
-
-  // Draw space objects on their respective layer canvases
-  var meteorsDead=0;
-  for(var oi=0;oi<spaceObjects.length;oi++){
-    var obj=spaceObjects[oi];
-    var oc=layerCtx[obj.layer];
-    var lSpd=[0.2,0.7,1.0][obj.layer];
-
-    if(obj.type==='planet'){
-      // Slow drift downward with slight parallax from player position
-      obj.x-=obj.sp*0.3;
-      obj.y+=obj.sp;
-      // Parallax offset based on player position
-      var px=obj.x - pdx*8*lSpd;
-      var py=obj.y - pdy*5*lSpd;
-      // Wrap
-      if(obj.y>H+obj.sz*2){obj.y=-obj.sz*2;obj.x=Math.random()*W;}
-      if(obj.x<-obj.sz*3)obj.x=W+obj.sz*2;
-      // Draw planet
-      oc.save();
-      // Planet body
-      var pg=oc.createRadialGradient(px-obj.sz*.3,py-obj.sz*.3,0,px,py,obj.sz);
-      pg.addColorStop(0,obj.col.detail);
-      pg.addColorStop(1,obj.col.body);
-      oc.fillStyle=pg;
-      oc.beginPath();oc.arc(px,py,obj.sz,0,Math.PI*2);oc.fill();
-      // Surface detail — dark patches
-      oc.globalAlpha=0.2;oc.fillStyle='#000';
-      oc.beginPath();oc.arc(px+obj.sz*.2,py-obj.sz*.1,obj.sz*.3,0,Math.PI*2);oc.fill();
-      oc.beginPath();oc.arc(px-obj.sz*.3,py+obj.sz*.25,obj.sz*.2,0,Math.PI*2);oc.fill();
-      oc.globalAlpha=1;
-      // Ring if applicable
-      if(obj.col.ring){
-        oc.strokeStyle=obj.col.ring;oc.lineWidth=obj.sz*0.15;
-        oc.beginPath();
-        oc.ellipse(px,py,obj.sz*1.6,obj.sz*0.35,obj.rot,0,Math.PI*2);
-        oc.stroke();
-      }
-      // Atmospheric glow
-      oc.globalAlpha=0.08;
-      oc.fillStyle=obj.col.detail;
-      oc.beginPath();oc.arc(px,py,obj.sz*1.3,0,Math.PI*2);oc.fill();
-      oc.globalAlpha=1;
-      oc.restore();
-
-    } else if(obj.type==='asteroid'){
-      obj.x-=obj.sp*0.2;
-      obj.y+=obj.sp;
-      obj.rot+=obj.rotSpd;
-      var ax=obj.x - pdx*15*lSpd;
-      var ay=obj.y - pdy*10*lSpd;
-      if(obj.y>H+20){obj.y=-20;obj.x=Math.random()*W;}
-      if(obj.x<-30)obj.x=W+20;
-      // Draw tumbling asteroid (irregular shape)
-      oc.save();oc.translate(ax,ay);oc.rotate(obj.rot);
-      oc.fillStyle=obj.col;
-      oc.beginPath();
-      oc.moveTo(-obj.sz,-obj.sz*0.6);
-      oc.lineTo(obj.sz*0.4,-obj.sz);
-      oc.lineTo(obj.sz,obj.sz*0.3);
-      oc.lineTo(obj.sz*0.3,obj.sz);
-      oc.lineTo(-obj.sz*0.7,obj.sz*0.7);
-      oc.closePath();oc.fill();
-      // highlight
-      oc.globalAlpha=0.3;oc.fillStyle='#aaa';
-      oc.beginPath();oc.arc(-obj.sz*.2,-obj.sz*.2,obj.sz*.25,0,Math.PI*2);oc.fill();
-      oc.globalAlpha=1;
-      oc.restore();
-
-    } else if(obj.type==='meteor'){
-      obj.life--;
-      if(obj.life<=0){meteorsDead++;continue;}
-      var mx=obj.x,my=obj.y;
-      obj.x+=Math.cos(obj.ang)*obj.sp;
-      obj.y+=Math.sin(obj.ang)*obj.sp;
-      // Trail
-      obj.trail.push({x:obj.x,y:obj.y});
-      if(obj.trail.length>18)obj.trail.shift();
-      // Draw trail on near layer
-      var nc=sxNear;
-      for(var ti=1;ti<obj.trail.length;ti++){
-        var tf=ti/obj.trail.length;
-        nc.globalAlpha=tf*0.6*(obj.life/obj.maxLife);
-        nc.strokeStyle=obj.col;nc.lineWidth=obj.sz*tf*1.5;nc.lineCap='round';
-        nc.beginPath();nc.moveTo(obj.trail[ti-1].x,obj.trail[ti-1].y);nc.lineTo(obj.trail[ti].x,obj.trail[ti].y);nc.stroke();
-      }
-      // Bright head
-      nc.globalAlpha=obj.life/obj.maxLife;
-      nc.fillStyle='#fff';nc.beginPath();nc.arc(obj.x,obj.y,obj.sz,0,Math.PI*2);nc.fill();
-      nc.fillStyle=obj.col;nc.globalAlpha=(obj.life/obj.maxLife)*0.4;
-      nc.beginPath();nc.arc(obj.x,obj.y,obj.sz*3,0,Math.PI*2);nc.fill();
-      nc.globalAlpha=1;
-    }
-  }
-  // Remove dead meteors and spawn new ones
-  spaceObjects=spaceObjects.filter(function(o){return o.type!=='meteor'||o.life>0;});
-  if(meteorsDead>0||Math.random()<0.008){spawnMeteor();}
 }
 
 // Pre-rendered atmospheric background canvas
@@ -635,18 +499,16 @@ function draw(ts){
   if(!bgCtx||bgCanvas.width!==W)renderSpaceBg();
   cx.drawImage(bgCanvas,0,0);
 
-  // Parallax offset for moving layers based on player position
+  // Parallax offset for soft layers
   var pdx=(P?P.x-MX:0)/MX, pdy=(P?P.y-MY:0)/MY;
 
   drawStars(ts);
   cx.save();
-  // Far layer — heavy blur for depth-of-field
-  cx.filter='blur(4px)';cx.globalAlpha=.5;cx.drawImage(scvFar,-pdx*6,-pdy*4);
-  // Mid layer — gentle blur
-  cx.filter='blur(1.2px)';cx.globalAlpha=.7;cx.drawImage(scvMid,-pdx*12,-pdy*8);
-  // Near layer — sharp, strong parallax
-  cx.filter='none';cx.globalAlpha=0.9;cx.drawImage(scvNear,-pdx*20,-pdy*14);
-  cx.globalAlpha=1;cx.restore();
+  // Far layer — heavy blur, very dim
+  cx.filter='blur(6px)';cx.globalAlpha=.35;cx.drawImage(scvFar,-pdx*4,-pdy*3);
+  // Mid layer — moderate blur, slightly brighter
+  cx.filter='blur(3px)';cx.globalAlpha=.45;cx.drawImage(scvMid,-pdx*8,-pdy*5);
+  cx.filter='none';cx.globalAlpha=1;cx.restore();
 
   var ox=0,oy=0;if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8)*.4;ox=(Math.random()-.5)*sa*2;oy=(Math.random()-.5)*sa*2;}cx.translate(ox,oy);
 
