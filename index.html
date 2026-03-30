@@ -36,7 +36,7 @@ body{display:flex;justify-content:center;padding:8px 6px;min-height:100vh;min-he
     <button id="bfire">&bull; fire</button>
     <button id="br">&rarr;</button><button id="bd">&darr;</button>
   </div>
-  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v3.0.0</div>
+  <div style="text-align:center;font-size:9px;opacity:.25;padding:6px 0;color:#6888aa;">v3.0.1</div>
 </div>
 <script src="assets.js"></script>
 <script>
@@ -87,26 +87,37 @@ var spaceObjs=[];
 function regenerateStars(){
   spaceObjs=[];
   // --- FAR (layer 0): large slow planets, dim stars ---
-  for(var i=0;i<90;i++){
-    spaceObjs.push({type:'star',layer:0,x:Math.random()*W,y:Math.random()*H,sz:0.4+Math.random()*0.6,sp:0.1+Math.random()*0.3,br:0.08+Math.random()*0.12,tw:Math.random()*Math.PI*2,ang:Math.PI/2});
+  for(var i=0;i<80;i++){
+    spaceObjs.push({type:'star',layer:0,x:Math.random()*W,y:Math.random()*H,sz:0.5+Math.random()*0.8,sp:0.15+Math.random()*0.4,br:0.12+Math.random()*0.18,tw:Math.random()*Math.PI*2,ang:Math.PI/2+Math.random()*0.06-0.03});
   }
-  var farPC=[{fill:'rgba(60,80,130,.12)',hi:'rgba(90,110,160,.08)',r:null},{fill:'rgba(100,70,50,.10)',hi:'rgba(140,100,70,.06)',r:'rgba(160,140,110,.05)'},{fill:'rgba(70,50,90,.10)',hi:'rgba(100,70,120,.06)',r:null}];
-  for(var fp=0;fp<2;fp++){var fc=farPC[fp%3];spaceObjs.push({type:'planet',layer:0,x:Math.random()*W,y:Math.random()*H,sz:25+Math.random()*40,sp:0.06+Math.random()*0.1,fill:fc.fill,hi:fc.hi,ring:fc.r});}
-  // --- MID (layer 1): medium planets, dust clouds, stars ---
-  for(var j=0;j<60;j++){
-    spaceObjs.push({type:'star',layer:1,x:Math.random()*W,y:Math.random()*H,sz:0.4+Math.random()*0.8,sp:0.3+Math.random()*0.6,br:0.10+Math.random()*0.18,tw:Math.random()*Math.PI*2,ang:Math.PI/2+Math.random()*0.2-0.1});
+  var farPC=[
+    {fill:'rgba(70,90,150,.18)',hi:'rgba(110,130,180,.12)',r:null},
+    {fill:'rgba(120,85,55,.16)',hi:'rgba(170,120,80,.10)',r:'rgba(180,160,130,.08)'},
+    {fill:'rgba(80,55,100,.15)',hi:'rgba(120,80,140,.09)',r:null}
+  ];
+  for(var fp=0;fp<3;fp++){var fc=farPC[fp%3];spaceObjs.push({type:'planet',layer:0,x:Math.random()*W,y:Math.random()*H,sz:30+Math.random()*50,sp:0.12+Math.random()*0.18,fill:fc.fill,hi:fc.hi,ring:fc.r});}
+
+  // --- MID (layer 1): medium planets with rings, dust clouds, stars ---
+  for(var j=0;j<50;j++){
+    spaceObjs.push({type:'star',layer:1,x:Math.random()*W,y:Math.random()*H,sz:0.5+Math.random()*1.0,sp:0.5+Math.random()*1.0,br:0.15+Math.random()*0.22,tw:Math.random()*Math.PI*2,ang:Math.PI/2+Math.random()*0.1-0.05});
   }
-  var midPC=[{fill:'rgba(80,60,40,.14)',hi:'rgba(120,90,60,.08)',r:null},{fill:'rgba(50,70,100,.12)',hi:'rgba(70,100,140,.07)',r:'rgba(120,140,170,.06)'},{fill:'rgba(90,60,70,.11)',hi:'rgba(130,80,100,.06)',r:null},{fill:'rgba(60,90,60,.10)',hi:'rgba(80,120,80,.06)',r:'rgba(100,130,90,.05)'}];
-  for(var mp=0;mp<3;mp++){var mc=midPC[mp%4];spaceObjs.push({type:'planet',layer:1,x:Math.random()*W,y:Math.random()*H,sz:8+Math.random()*18,sp:0.2+Math.random()*0.35,fill:mc.fill,hi:mc.hi,ring:mc.r});}
-  for(var dc=0;dc<4;dc++){spaceObjs.push({type:'dust',layer:1,x:Math.random()*W,y:Math.random()*H,sz:30+Math.random()*50,sp:0.15+Math.random()*0.2,col:'rgba('+(20+Math.random()*40|0)+','+(30+Math.random()*50|0)+','+(60+Math.random()*80|0)+',.04)',ang:Math.PI/2});}
+  var midPC=[
+    {fill:'rgba(90,70,45,.20)',hi:'rgba(140,110,70,.12)',r:null},
+    {fill:'rgba(55,80,120,.18)',hi:'rgba(80,110,160,.11)',r:'rgba(130,150,180,.09)'},
+    {fill:'rgba(100,65,80,.16)',hi:'rgba(150,90,110,.10)',r:null},
+    {fill:'rgba(65,100,65,.15)',hi:'rgba(90,140,90,.09)',r:'rgba(110,140,100,.07)'}
+  ];
+  for(var mp=0;mp<4;mp++){var mc=midPC[mp%4];spaceObjs.push({type:'planet',layer:1,x:Math.random()*W,y:Math.random()*H,sz:10+Math.random()*22,sp:0.4+Math.random()*0.6,fill:mc.fill,hi:mc.hi,ring:mc.r});}
+  for(var dc=0;dc<3;dc++){spaceObjs.push({type:'dust',layer:1,x:Math.random()*W,y:Math.random()*H,sz:40+Math.random()*60,sp:0.3+Math.random()*0.4,col:'rgba('+(25+Math.random()*40|0)+','+(35+Math.random()*50|0)+','+(70+Math.random()*80|0)+',.06)',ang:Math.PI/2});}
+
   // --- NEAR-ISH (layer 2): small planets, fine dust, dim wisps ---
-  for(var k=0;k<35;k++){
-    spaceObjs.push({type:'star',layer:2,x:Math.random()*W,y:Math.random()*H,sz:0.3+Math.random()*0.5,sp:0.6+Math.random()*1.0,br:0.06+Math.random()*0.10,tw:Math.random()*Math.PI*2,ang:Math.PI/2+Math.random()*0.15-0.075});
+  for(var k=0;k<30;k++){
+    spaceObjs.push({type:'star',layer:2,x:Math.random()*W,y:Math.random()*H,sz:0.4+Math.random()*0.6,sp:1.0+Math.random()*1.5,br:0.08+Math.random()*0.14,tw:Math.random()*Math.PI*2,ang:Math.PI/2+Math.random()*0.08-0.04});
   }
-  for(var sp2=0;sp2<2;sp2++){spaceObjs.push({type:'planet',layer:2,x:Math.random()*W,y:Math.random()*H,sz:4+Math.random()*8,sp:0.4+Math.random()*0.5,fill:'rgba(70,60,50,.10)',hi:'rgba(100,90,70,.06)',ring:null});}
+  for(var sp2=0;sp2<3;sp2++){spaceObjs.push({type:'planet',layer:2,x:Math.random()*W,y:Math.random()*H,sz:5+Math.random()*10,sp:0.8+Math.random()*0.8,fill:'rgba(80,70,55,.14)',hi:'rgba(120,105,80,.09)',ring:null});}
   for(var mw=0;mw<3;mw++)spawnWisp();
 }
-function spawnWisp(){spaceObjs.push({type:'wisp',layer:2,x:-30+Math.random()*W*0.4,y:-30+Math.random()*H*0.2,sp:1.5+Math.random()*2,ang:Math.PI*0.4+Math.random()*0.2,life:90+Math.random()*70,maxLife:90+Math.random()*70,len:20+Math.random()*30});}
+function spawnWisp(){spaceObjs.push({type:'wisp',layer:2,x:-30+Math.random()*W*0.5,y:-30+Math.random()*H*0.3,sp:2.0+Math.random()*2.5,ang:Math.PI*0.38+Math.random()*0.24,life:70+Math.random()*60,maxLife:70+Math.random()*60,len:25+Math.random()*35});}
 
 function drawSpaceLayer(layerIdx,sc){
   for(var i=0;i<spaceObjs.length;i++){
@@ -122,8 +133,8 @@ function drawSpaceLayer(layerIdx,sc){
       var pg=sc.createRadialGradient(o.x-o.sz*.25,o.y-o.sz*.25,0,o.x,o.y,o.sz);
       pg.addColorStop(0,o.hi);pg.addColorStop(1,o.fill);
       sc.fillStyle=pg;sc.beginPath();sc.arc(o.x,o.y,o.sz,0,Math.PI*2);sc.fill();
-      sc.fillStyle='rgba(0,0,0,.03)';sc.beginPath();sc.arc(o.x+o.sz*.2,o.y+o.sz*.15,o.sz*.35,0,Math.PI*2);sc.fill();
-      if(o.ring){sc.strokeStyle=o.ring;sc.lineWidth=o.sz*0.1;sc.beginPath();sc.ellipse(o.x,o.y,o.sz*1.7,o.sz*0.25,0.25,0,Math.PI*2);sc.stroke();}
+      sc.fillStyle='rgba(0,0,0,.04)';sc.beginPath();sc.arc(o.x+o.sz*.2,o.y+o.sz*.15,o.sz*.35,0,Math.PI*2);sc.fill();
+      if(o.ring){sc.strokeStyle=o.ring;sc.lineWidth=o.sz*0.12;sc.beginPath();sc.ellipse(o.x,o.y,o.sz*1.7,o.sz*0.28,0.25,0,Math.PI*2);sc.stroke();}
     } else if(o.type==='dust'){
       o.y+=o.sp;o.x-=o.sp*0.1;if(o.y>H+o.sz)o.y=-o.sz;
       var dg=sc.createRadialGradient(o.x,o.y,0,o.x,o.y,o.sz);dg.addColorStop(0,o.col);dg.addColorStop(1,'rgba(0,0,0,0)');
@@ -131,13 +142,13 @@ function drawSpaceLayer(layerIdx,sc){
     } else if(o.type==='wisp'){
       o.life--;o.x+=Math.cos(o.ang)*o.sp;o.y+=Math.sin(o.ang)*o.sp;
       if(o.life>0){var wa=o.life/o.maxLife,nx=Math.cos(o.ang),ny=Math.sin(o.ang);
-      sc.strokeStyle='rgba(180,200,255,'+(wa*0.06).toFixed(3)+')';sc.lineWidth=0.8;sc.lineCap='round';
+      sc.strokeStyle='rgba(180,200,255,'+(wa*0.08).toFixed(3)+')';sc.lineWidth=1;sc.lineCap='round';
       sc.beginPath();sc.moveTo(o.x-nx*o.len,o.y-ny*o.len);sc.lineTo(o.x,o.y);sc.stroke();
-      sc.fillStyle='rgba(220,230,255,'+(wa*0.10).toFixed(3)+')';sc.beginPath();sc.arc(o.x,o.y,0.8,0,Math.PI*2);sc.fill();}
+      sc.fillStyle='rgba(220,240,255,'+(wa*0.14).toFixed(3)+')';sc.beginPath();sc.arc(o.x,o.y,1,0,Math.PI*2);sc.fill();}
     }
   }
   spaceObjs=spaceObjs.filter(function(o){return o.type!=='wisp'||o.life>0;});
-  if(Math.random()<0.012)spawnWisp();
+  if(Math.random()<0.015)spawnWisp();
 }
 
 function oval(ox,oy,rx,ry){var k=.552;cx.beginPath();cx.moveTo(ox,oy-ry);cx.bezierCurveTo(ox+rx*k,oy-ry,ox+rx,oy-ry*k,ox+rx,oy);cx.bezierCurveTo(ox+rx,oy+ry*k,ox+rx*k,oy+ry,ox,oy+ry);cx.bezierCurveTo(ox-rx*k,oy+ry,ox-rx,oy+ry*k,ox-rx,oy);cx.bezierCurveTo(ox-rx,oy-ry*k,ox-rx*k,oy-ry,ox,oy-ry);cx.closePath();}
@@ -520,17 +531,17 @@ function draw(ts){
   if(!bgCtx||bgCanvas.width!==W)renderSpaceBg();
   cx.drawImage(bgCanvas,0,0);
 
-  // 3-layer parallax — each drawn to offscreen canvas, then composited with blur + parallax shift
+  // 3-layer parallax — each drawn to offscreen canvas, composited with blur + parallax shift
   var pdx=(P?P.x-MX:0)/MX, pdy=(P?P.y-MY:0)/MY;
   sxFar.clearRect(0,0,W,H);sxMid.clearRect(0,0,W,H);sxNear.clearRect(0,0,W,H);
   drawSpaceLayer(0,sxFar);drawSpaceLayer(1,sxMid);drawSpaceLayer(2,sxNear);
   cx.save();
-  // Far: heavy blur, slow parallax, dim
-  cx.filter='blur(5px)';cx.globalAlpha=.6;cx.drawImage(scvFar,-pdx*4,-pdy*3);
-  // Mid: medium blur, medium parallax
-  cx.filter='blur(2.5px)';cx.globalAlpha=.55;cx.drawImage(scvMid,-pdx*10,-pdy*7);
-  // Near-ish: light blur, more parallax — still soft enough to not compete
-  cx.filter='blur(1.2px)';cx.globalAlpha=.45;cx.drawImage(scvNear,-pdx*18,-pdy*12);
+  // Far: heavy blur, slow parallax shift (noticeable but gentle)
+  cx.filter='blur(5px)';cx.globalAlpha=.7;cx.drawImage(scvFar,-pdx*15,-pdy*10);
+  // Mid: medium blur, stronger parallax
+  cx.filter='blur(2.5px)';cx.globalAlpha=.65;cx.drawImage(scvMid,-pdx*35,-pdy*25);
+  // Near-ish: light blur, strongest parallax — most movement feel
+  cx.filter='blur(1.2px)';cx.globalAlpha=.55;cx.drawImage(scvNear,-pdx*60,-pdy*40);
   cx.filter='none';cx.globalAlpha=1;cx.restore();
 
   var ox=0,oy=0;if(shake.life>0&&!over){var sa=shake.amt*(shake.life/8)*.4;ox=(Math.random()-.5)*sa*2;oy=(Math.random()-.5)*sa*2;}cx.translate(ox,oy);
